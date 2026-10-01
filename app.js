@@ -5,7 +5,10 @@ const productRoutes = require('./routes/productRoutes');
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+
+// Naikkan batas JSON agar image Base64 > 2 MB bisa diterima
+// oleh Express dan divalidasi oleh aplikasi.
+app.use(express.json({ limit: '4mb' }));
 
 // endpoint for healthcheck
 app.get('/health', (req, res) => {
@@ -13,7 +16,6 @@ app.get('/health', (req, res) => {
         status: "ok",
         service: "product-service"
     });
-
 });
 
 app.use("/products", productRoutes);
@@ -23,9 +25,6 @@ app.use((req, res) => {
     res.status(404).json({
         message: "Endpoint tidak dikenal"
     });
-
 });
 
 module.exports = app;
-
-

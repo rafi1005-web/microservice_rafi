@@ -1,5 +1,63 @@
 const productModel = require('../models/productModel');
 
+// Validasi Base64 dan ukuran maksimal 2 MB
+function validateImage(image) {
+    // Cek wajib diisi
+    if (!image || image.trim() === '') {
+        return {
+            valid: false,
+            message: "Field image wajib diisi"
+        };
+    }
+
+    // Jika menggunakan Data URI, hapus prefix-nya
+    let base64Data = image;
+
+    if (image.startsWith('data:image/')) {
+        const parts = image.split(',');
+
+        if (parts.length !== 2) {
+            return {
+                valid: false,
+                message: "Field image harus berupa Base64 yang valid"
+            };
+        }
+
+        base64Data = parts[1];
+    }
+
+    // Cek format Base64
+    const base64Regex = /^[A-Za-z0-9+/]+={0,2}$/;
+
+    if (
+        !base64Regex.test(base64Data) ||
+        base64Data.length % 4 !== 0
+    ) {
+        return {
+            valid: false,
+            message: "Field image harus berupa Base64 yang valid"
+        };
+    }
+
+    // Decode Base64 untuk mengecek ukuran file sebenarnya
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+
+    const maxSize = 2 * 1024 * 1024; // 2 MB
+
+    if (imageBuffer.length > maxSize) {
+        return {
+            valid: false,
+            message: "Ukuran image maksimal 2 MB"
+        };
+    }
+
+    return {
+        valid: true,
+        image: base64Data
+    };
+}
+
+
 // GET semua produk
 async function index(req, res) {
     try {
@@ -17,6 +75,7 @@ async function index(req, res) {
         });
     }
 }
+
 
 // GET produk berdasarkan ID
 async function getById(req, res) {
@@ -42,14 +101,31 @@ async function getById(req, res) {
     }
 }
 
+
 // POST tambah produk
 async function create(req, res) {
     try {
-        const { name, description, price, stack } = req.body;
+        const {
+            name,
+            description,
+            price,
+            stack,
+            image
+        } = req.body;
 
+        // Validasi data produk
         if (!name || price === undefined || stack === undefined) {
             return res.status(400).json({
                 message: "name, price, dan stack wajib diisi"
+            });
+        }
+
+        // Validasi image
+        const imageValidation = validateImage(image);
+
+        if (!imageValidation.valid) {
+            return res.status(400).json({
+                message: imageValidation.message
             });
         }
 
@@ -57,7 +133,8 @@ async function create(req, res) {
             name,
             description,
             price,
-            stack
+            stack,
+            image: imageValidation.image
         });
 
         res.status(201).json({
@@ -73,16 +150,33 @@ async function create(req, res) {
     }
 }
 
+
 // PUT update produk
 async function update(req, res) {
     try {
-        const { name, description, price, stack } = req.body;
+        const {
+            name,
+            description,
+            price,
+            stack,
+            image
+        } = req.body;
 
+        // Cek produk terlebih dahulu
         const existingProduct = await productModel.getProductById(req.params.id);
 
         if (!existingProduct) {
             return res.status(404).json({
                 message: "Produk tidak ditemukan"
+            });
+        }
+
+        // Validasi image
+        const imageValidation = validateImage(image);
+
+        if (!imageValidation.valid) {
+            return res.status(400).json({
+                message: imageValidation.message
             });
         }
 
@@ -92,7 +186,8 @@ async function update(req, res) {
                 name,
                 description,
                 price,
-                stack
+                stack,
+                image: imageValidation.image
             }
         );
 
@@ -108,6 +203,7 @@ async function update(req, res) {
         });
     }
 }
+
 
 // DELETE hapus produk
 async function remove(req, res) {
@@ -131,6 +227,7 @@ async function remove(req, res) {
         });
     }
 }
+
 
 module.exports = {
     index,
