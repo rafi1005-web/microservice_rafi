@@ -1,0 +1,38 @@
+services:
+  cart-service:
+    build: .
+    container_name: cart-service
+    restart: always
+    ports:
+      - "3001:8000"
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=cart-db
+      - DB_PORT=5432
+      - DB_DATABASE=cartdb
+      - DB_USERNAME=appuser
+      - DB_PASSWORD=apppassword
+    depends_on:
+      cart-db:
+        condition: service_healthy
+
+  cart-db:
+    image: postgres:16-alpine
+    container_name: cart-db
+    restart: always
+    environment:
+      POSTGRES_DB: cartdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppassword
+    ports:
+      - "5433:5432" # Diubah dari 5432:5432 agar tidak bentrok
+    volumes:
+      - cart_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d cartdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  cart_db_data:
