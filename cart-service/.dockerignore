@@ -1,7 +1,4 @@
-node_modules
-public/build
-storage/*.key
-.env
-.git
-docker-compose.yml
-Dockerfile
+# Folder ini dibuat ulang di dalam image lewat composer install,
+# jadi tidak perlu ikut disalin dari komputer lokal.
+vendor/
+node_modules/

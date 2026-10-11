@@ -1,5 +1,9 @@
 <?php
 
+// app/Http/Controllers/CartController.php
+// Lapisan controller: menerima request, memanggil service, membentuk response JSON,
+// dan menangkap error lewat try catch. Tidak ada query atau aturan bisnis di sini.
+
 namespace App\Http\Controllers;
 
 use App\Exceptions\CartItemNotFoundException;
@@ -12,20 +16,18 @@ use Throwable;
 
 class CartController extends Controller
 {
-    protected CartService $cartService;
-
-    public function __construct(CartService $cartService)
+    // CartService disuntikkan otomatis oleh Laravel (dependency injection).
+    public function __construct(private CartService $cartService)
     {
-        $this->cartService = $cartService;
     }
 
     // GET /carts/{userId}
-    public function index(int $userId): JsonResponse
+    public function show(int $userId): JsonResponse
     {
         try {
             return response()->json([
                 'message' => 'Berhasil mengambil keranjang',
-                'data' => $this->cartService->getCartByUserId($userId),
+                'data' => $this->cartService->getCart($userId),
             ]);
         } catch (Throwable $e) {
             return $this->errorResponse($e, 'mengambil keranjang');
@@ -37,11 +39,7 @@ class CartController extends Controller
     {
         try {
             $data = $request->validated();
-            $item = $this->cartService->addItem(
-                $data['user_id'],
-                $data['product_id'],
-                $data['quantity'] ?? 1
-            );
+            $item = $this->cartService->addItem($data['user_id'], $data['product_id'], $data['quantity'] ?? 1);
 
             // 201 kalau item baru dibuat, 200 kalau hanya menambah jumlah item yang sudah ada.
             return response()->json([
@@ -58,10 +56,8 @@ class CartController extends Controller
     {
         try {
             $item = $this->cartService->updateQuantity($id, $request->validated()['quantity']);
-            return response()->json([
-                'message' => 'Jumlah item berhasil diperbarui',
-                'data' => $item,
-            ]);
+
+            return response()->json(['message' => 'Jumlah item berhasil diperbarui', 'data' => $item]);
         } catch (CartItemNotFoundException $e) {
             // Error yang sudah kita duga: balas 404, tidak perlu dicatat sebagai error.
             return response()->json(['message' => $e->getMessage()], 404);
@@ -75,9 +71,8 @@ class CartController extends Controller
     {
         try {
             $this->cartService->removeItem($id);
-            return response()->json([
-                'message' => 'Item berhasil dihapus dari keranjang',
-            ]);
+
+            return response()->json(['message' => 'Item berhasil dihapus dari keranjang']);
         } catch (CartItemNotFoundException $e) {
             return response()->json(['message' => $e->getMessage()], 404);
         } catch (Throwable $e) {
@@ -89,10 +84,9 @@ class CartController extends Controller
     public function clear(int $userId): JsonResponse
     {
         try {
-            $deletedCount = $this->cartService->clearCart($userId);
             return response()->json([
                 'message' => 'Keranjang berhasil dikosongkan',
-                'data' => ['deleted_items' => $deletedCount],
+                'data' => ['deleted_items' => $this->cartService->clearCart($userId)],
             ]);
         } catch (Throwable $e) {
             return $this->errorResponse($e, 'mengosongkan keranjang');
@@ -113,11 +107,8 @@ class CartController extends Controller
 
         // Detail error hanya dikirim ke client saat APP_DEBUG=true, supaya tidak bocor di production.
         if (config('app.debug')) {
-            $body['debug'] = [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ];
+            $body['error'] = $e->getMessage();
+            $body['location'] = $e->getFile().':'.$e->getLine();
         }
 
         return response()->json($body, 500);

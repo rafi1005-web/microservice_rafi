@@ -1,5 +1,10 @@
 <?php
 
+// app/Services/CartService.php
+// Lapisan service: tempat logika bisnis keranjang.
+// Dipanggil oleh controller, memakai model untuk mengakses data.
+// Tidak mengenal request atau response HTTP sama sekali, jadi mudah dipakai ulang dan dites.
+
 namespace App\Services;
 
 use App\Exceptions\CartItemNotFoundException;
@@ -7,8 +12,8 @@ use App\Models\CartItem;
 
 class CartService
 {
-    // Mengambil semua item keranjang milik user tertentu beserta total quantity-nya.
-    public function getCartByUserId(int $userId): array
+    // Isi keranjang satu user beserta total jumlah barangnya.
+    public function getCart(int $userId): array
     {
         $items = CartItem::forUser($userId)->get();
 
@@ -22,11 +27,7 @@ class CartService
     // Tambah item. Kalau produk yang sama sudah ada di keranjang user, jumlahnya ditambah.
     public function addItem(int $userId, int $productId, int $quantity): CartItem
     {
-        $item = CartItem::firstOrNew([
-            'user_id' => $userId,
-            'product_id' => $productId,
-        ]);
-
+        $item = CartItem::firstOrNew(['user_id' => $userId, 'product_id' => $productId]);
         $item->quantity = ($item->exists ? $item->quantity : 0) + $quantity;
         $item->save();
 
@@ -38,7 +39,7 @@ class CartService
     {
         $item = CartItem::find($id);
 
-        if (!$item) {
+        if (! $item) {
             throw new CartItemNotFoundException($id);
         }
 
@@ -55,7 +56,7 @@ class CartService
         }
     }
 
-    // Kosongkan keranjang satu user. Mengembalikan jumlah item yang terhapus.
+    // Kosongkan keranjang satu user. Balikin jumlah item yang terhapus.
     public function clearCart(int $userId): int
     {
         return CartItem::where('user_id', $userId)->delete();
