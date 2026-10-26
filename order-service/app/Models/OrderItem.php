@@ -9,6 +9,15 @@ class OrderItem extends Model
 {
     public $timestamps = false;
 
+    protected $hidden = ['id', 'order_id'];
+
+protected function casts(): array
+{
+    return [
+        'unit_price' => 'float',
+        'subtotal' => 'float',
+    ];
+}
     protected $fillable = [
         'order_id', 'product_id', 'product_name',
         'unit_price', 'quantity', 'subtotal',
@@ -19,3 +28,4 @@ class OrderItem extends Model
         return $this->belongsTo(Order::class);
     }
 }
+

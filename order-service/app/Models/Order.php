@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
+    protected function casts(): array
+{
+    return ['total_amount' => 'float'];
+}
     protected $fillable = ['user_id', 'status', 'total_amount'];
 
     public function items(): HasMany
@@ -14,3 +18,4 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 }
+

@@ -7,8 +7,10 @@ use App\Exceptions\InsufficientStockException;
 use App\Exceptions\ProductNotFoundException;
 use App\Exceptions\ServiceUnavailableException;
 use App\Http\Requests\CreateOrderRequest;
+use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -31,7 +33,7 @@ class OrderController extends Controller
                 'data' => $order,
             ], 201);
         } catch (EmptyCartException | ProductNotFoundException | InsufficientStockException $e) {
-           return response()->json(['message' => $e->getMessage()], 409);
+            return response()->json(['message' => $e->getMessage()], 409);
         } catch (ServiceUnavailableException $e) {
             return response()->json(['message' => $e->getMessage()], 503);
         } catch (Throwable $e) {
@@ -44,5 +46,68 @@ class OrderController extends Controller
 
             return response()->json($body, 500);
         }
+    }
+
+    public function show(int $id): JsonResponse
+    {
+        $order = Order::with('items')->find($id);
+
+        if (! $order) {
+            return response()->json([
+                'message' => "Pesanan dengan id {$id} tidak ditemukan",
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Berhasil mengambil pesanan',
+            'data' => $order,
+        ]);
+    }
+
+    public function byUser(Request $request, int $userId): JsonResponse
+    {
+        $status = $request->query('status');
+
+        if ($status !== null && ! in_array($status, ['PENDING', 'PAID'], true)) {
+            return response()->json([
+                'message' => 'Data yang dikirim tidak valid',
+                'errors' => ['status' => ['Status harus PENDING atau PAID']],
+            ], 422);
+        }
+
+        $orders = Order::with('items')
+            ->where('user_id', $userId)
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'message' => 'Berhasil mengambil daftar pesanan',
+            'data' => $orders,
+        ]);
+    }
+
+    public function pay(int $id): JsonResponse
+    {
+        $order = Order::with('items')->find($id);
+
+        if (! $order) {
+            return response()->json([
+                'message' => "Pesanan dengan id {$id} tidak ditemukan",
+            ], 404);
+        }
+
+        if ($order->status !== 'PENDING') {
+            return response()->json([
+                'message' => "Pesanan berstatus {$order->status}, hanya pesanan PENDING yang dapat dibayar",
+            ], 409);
+        }
+
+        $order->update(['status' => 'PAID']);
+
+        return response()->json([
+            'message' => 'Pesanan berhasil dibayar',
+            'data' => $order,
+        ]);
     }
 }
