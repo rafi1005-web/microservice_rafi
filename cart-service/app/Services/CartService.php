@@ -20,13 +20,11 @@ class CartService
 
     // Mengambil semua item keranjang milik user tertentu
     public function getCart(int $userId): array
-    {
-        return CartItem::where('user_id', $userId)
-            ->with('product')
-            ->get()
-            ->toArray();
-    }
-
+{
+    return CartItem::where('user_id', $userId)
+        ->get()
+        ->toArray();
+}
     // Tambah item. Kalau produk yang sama sudah ada di keranjang user, jumlahnya ditambah.
     public function addItem(int $userId, int $productId, int $quantity): CartItem
     {
