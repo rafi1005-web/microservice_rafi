@@ -19,7 +19,7 @@ class CartClient
     public function getCart(int $userId): array
     {
         try {
-           $response = $this->http()->get("/carts/{$userId}");
+            $response = $this->http()->get("/carts/{$userId}");
         } catch (ConnectionException $e) {
             Log::error('Cart-service tidak dapat dihubungi', [
                 'user_id' => $userId,
@@ -38,29 +38,33 @@ class CartClient
             throw new ServiceUnavailableException('Cart service');
         }
 
-        return $response->json('data');
+        $data = $response->json('data') ?? [];
+
+        // Cart-service dari kelas membalas data berupa daftar item.
+        // Bentuk di soal membungkusnya dalam objek yang punya kunci 'items'. Keduanya diterima.
+        return ['items' => array_is_list($data) ? $data : ($data['items'] ?? [])];
     }
 
     public function clearCart(int $userId): void
-{
-    try {
-        $response = $this->http()->delete("/carts/{$userId}");
-    } catch (ConnectionException $e) {
-        Log::error('Cart-service tidak dapat dihubungi saat mengosongkan keranjang', [
-            'user_id' => $userId,
-            'error' => $e->getMessage(),
-        ]);
+    {
+        try {
+            $response = $this->http()->delete("/carts/{$userId}");
+        } catch (ConnectionException $e) {
+            Log::error('Cart-service tidak dapat dihubungi saat mengosongkan keranjang', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
 
-        throw new ServiceUnavailableException('Cart service', $e);
+            throw new ServiceUnavailableException('Cart service', $e);
+        }
+
+        if (! $response->successful()) {
+            Log::error('Cart-service gagal mengosongkan keranjang', [
+                'user_id' => $userId,
+                'status' => $response->status(),
+            ]);
+
+            throw new ServiceUnavailableException('Cart service');
+        }
     }
-
-    if (! $response->successful()) {
-        Log::error('Cart-service gagal mengosongkan keranjang', [
-            'user_id' => $userId,
-            'status' => $response->status(),
-        ]);
-
-        throw new ServiceUnavailableException('Cart service');
-    }
-}
 }
