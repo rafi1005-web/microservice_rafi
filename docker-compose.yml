@@ -102,7 +102,7 @@
       - APP_NAME=order-service
       - APP_ENV=local
       - APP_KEY=base64:qwWL7ny4RGItK6NlxLUU7JUrj2UBBJui83NMjFMceWU=
-      - APP_DEBUG=true
+      - APP_DEBUG=false
       - DB_CONNECTION=mysql
       - DB_HOST=order-db
       - DB_PORT=3306
