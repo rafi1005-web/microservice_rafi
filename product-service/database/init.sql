@@ -15,7 +15,7 @@ INSERT INTO products (name, description, price, stock, stack, image) VALUES
 (
     'Keyboard Mekanikal',
     'Keyboard mekanikal switch blue',
-    500000,
+    450000,
     25,
     'Mechanical Keyboard',
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
@@ -23,16 +23,16 @@ INSERT INTO products (name, description, price, stock, stack, image) VALUES
 (
     'Mouse Wireless',
     'Mouse wireless dengan sensor optical',
-    350000,
-    10,
+    150000,
+    40,
     'Wireless Mouse',
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
 ),
 (
-    'Headset Gaming',
-    'Headset gaming dengan kualitas audio terbaik',
-    800000,
-    5,
-    'Gaming Headset',
+    'Monitor 24 Inch',
+    'Monitor 24 inch Full HD',
+    1800000,
+    10,
+    'Monitor',
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
 );
