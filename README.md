@@ -140,4 +140,4 @@ Controller hanya menerima request, memanggil `OrderService`, lalu menerjemahkan 
 - Tidak ada autentikasi: `user_id` dipercaya apa adanya dari body request.
 - Total harga dihitung dengan `float` pada kode (walaupun disimpan sebagai `decimal` di database), yang bisa menimbulkan galat pembulatan untuk harga berdesimal.
 - Pesanan `PENDING` tidak kedaluwarsa, dan tidak ada retry saat service lain gagal.
-- Product-service dipanggil satu per satu untuk tiap item keranjang, jadi jumlah panggilan bertambah seiring jumlah item.
+- Product-service dipanggil satu per satu untuk tiap item keranjang, jadi jumlah panggilan bertambah seiring jumlah item.in
